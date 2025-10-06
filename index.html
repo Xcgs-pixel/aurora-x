@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title></title>
+<style>
+:root{--d:#001018;--n1:#00ffcc;--n2:#00bfff;--d2:#000}
+html,body{height:100%;margin:0;background:radial-gradient(circle at center,var(--d),var(--d2));font-family:monospace;overflow:hidden}
+canvas{position:fixed;inset:0;display:block;z-index:0}
+.k{position:absolute;font-size:2.2rem;user-select:none;text-shadow:0 0 12px rgba(0,255,204,0.12);z-index:4;animation:f 6s ease-in-out infinite,r 12s linear infinite}
+.k1{top:12px;left:12px;color:var(--n1)}
+.k2{top:12px;right:12px;color:var(--n2)}
+.k3{bottom:12px;left:12px;color:#00ffaa}
+.k4{bottom:12px;right:12px;color:#00ccff}
+@keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes r{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+#t{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);background:transparent;border:none;border-bottom:2px solid rgba(0,255,204,0.12);color:transparent;caret-color:var(--n1);z-index:5;outline:none;width:180px;padding:8px}
+#u{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:6}
+.v{width:0;height:0;border-radius:50%;background:radial-gradient(circle,#88ffe6,#00aaff);opacity:0;transform:scale(0);transition:all 700ms ease-out}
+</style>
+</head>
+<body>
+<div class="k k1">⟆</div>
+<div class="k k2">Ϟ</div>
+<div class="k k3">⟠</div>
+<div class="k k4">✶</div>
+<input id="t" autocomplete="off" spellcheck="false" inputmode="text"/>
+<canvas id="c"></canvas>
+<div id="u"><div id="b" class="v"></div></div>
+
+<script type="module">
+import * as THREE from "https://unpkg.com/three@0.152.2/build/three.module.js";
+
+const d = s => { try { return atob(s) } catch(e){ return '' } }
+const A = d("cmV2b2x1cw==")   // primera clave (ofuscada)
+const B = d("dmFsdGhlcmlz")   // segunda clave (ofuscada)
+const M = d("bWFpbHRvOmJtODc3NDMxN0BnbWFpbC5jb20=") // mailto:... (ofuscado)
+
+const canvas = document.getElementById('c')
+const ren = new THREE.WebGLRenderer({canvas,antialias:true})
+ren.setPixelRatio(devicePixelRatio||1)
+ren.setSize(innerWidth,innerHeight)
+ren.setClearColor(0x000010,1)
+
+const s1 = new THREE.Scene()
+const cam1 = new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000)
+cam1.position.set(0,1.2,6)
+
+const g1 = new THREE.ConeGeometry(2.3,3.5,4)
+const m1 = new THREE.MeshStandardMaterial({color:0x00ffcc,emissive:0x002233,metalness:0.8,roughness:0.35,wireframe:true})
+const o1 = new THREE.Mesh(g1,m1)
+s1.add(o1)
+s1.add(new THREE.AmbientLight(0x00ffff,0.5))
+const pl = new THREE.PointLight(0x00ffff,1.2,50);pl.position.set(4,4,5);s1.add(pl)
+
+let s2=null, cam2=null, o2=null
+let mode=1, tt=0
+
+function loop(){
+  requestAnimationFrame(loop)
+  if(mode===1){
+    o1.rotation.y += 0.009; o1.rotation.x += 0.004
+    ren.render(s1,cam1)
+  } else if(mode===2 && s2 && o2){
+    o2.rotation.y += 0.01; o2.rotation.x += 0.006
+    tt += 0.016
+    const r = 0.2 + 0.8*(0.5+0.5*Math.sin(tt*0.7))
+    const g = 0.2 + 0.9*(0.5+0.5*Math.cos(tt*0.9))
+    const b = 0.2 + 1.0*(0.5+0.5*Math.sin(tt*0.5+1.2))
+    o2.material.emissive.setRGB(r*0.8,g*0.95,b*1.0)
+    ren.render(s2,cam2)
+  }
+}
+loop()
+
+addEventListener('resize',()=>{
+  ren.setSize(innerWidth,innerHeight)
+  if(mode===1){cam1.aspect=innerWidth/innerHeight;cam1.updateProjectionMatrix()}
+  if(mode===2 && cam2){cam2.aspect=innerWidth/innerHeight;cam2.updateProjectionMatrix()}
+})
+
+const inp = document.getElementById('t'), burst = document.getElementById('b')
+function animBurstAndOpen(u){
+  burst.style.transition = 'none'; burst.style.opacity='0.95'
+  burst.style.width='20px'; burst.style.height='20px'; burst.style.transform='scale(0.1)'
+  void burst.offsetWidth
+  burst.style.transition='all 700ms cubic-bezier(.2,.9,.2,1)'
+  burst.style.transform='scale(60)'; burst.style.opacity='0.95'
+  setTimeout(()=>{ burst.style.opacity='0'; if(u) window.location.href = u },800)
+}
+
+inp.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return
+  const v = (inp.value||'').trim().toLowerCase()
+  if(mode===1){
+    if(v===A){
+      animBurstAndOpen(null)
+      setTimeout(()=>{ init2(); mode=2; inp.value=''; inp.focus() },900)
+    } else { inp.value = '' }
+  } else if(mode===2){
+    if(v===B){
+      animBurstAndOpen(M)
+      inp.value=''; inp.disabled=true
+    } else { inp.value = '' }
+  }
+})
+
+function init2(){
+  if(s2) return
+  s2 = new THREE.Scene()
+  cam2 = new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000); cam2.position.set(0,1.2,6)
+  const g2 = new THREE.SphereGeometry(2.0,48,48)
+  const m2 = new THREE.MeshStandardMaterial({color:0x00ffff,emissive:0x001122,metalness:0.9,roughness:0.12,wireframe:true})
+  o2 = new THREE.Mesh(g2,m2); s2.add(o2)
+  s2.add(new THREE.AmbientLight(0x00ffff,0.7))
+  const p2 = new THREE.PointLight(0x00ffcc,1.5); p2.position.set(3,3,5); s2.add(p2)
+  const pg = new THREE.BufferGeometry(); const pc = 140
+  const pos = new Float32Array(pc*3)
+  for(let i=0;i<pc;i++){ pos[i*3+0]=(Math.random()-0.5)*14; pos[i*3+1]=(Math.random()-0.5)*8; pos[i*3+2]=(Math.random()-0.5)*8 -2 }
+  pg.setAttribute('position', new THREE.BufferAttribute(pos,3))
+  const pm = new THREE.PointsMaterial({color:0x00ffcc,size:0.04,transparent:true,opacity:0.6})
+  s2.add(new THREE.Points(pg,pm))
+}
+
+inp.focus()
+</script>
+</body>
+</html>
